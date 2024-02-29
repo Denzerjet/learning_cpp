@@ -59,12 +59,16 @@ class task {
 class calendar {
     private:
         std::vector<task> task_list; // new addition
+        // everything stored in the vector is stored on the heap since by runtime the stack size must be finalized
+        // so nothing dynamic can remain
 
     public:
         calendar() {}
 
-        void addTask(const task &new_task) { // expects a pointer to a task
-            task_list.push_back(new_task);
+        void addTask(const task &new_task) { // expects a reference to a task. (a task object)
+            // &new_task is pass by reference, so it doesn't make a copy
+            // but it still expects just a task object
+            task_list.push_back(new_task); // makes a copy of the argument and stores it on the heap
         }
 
         void deleteTask(int index) {
