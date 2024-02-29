@@ -46,6 +46,10 @@ class task {
                                 + "/" + std::to_string(this->due_date[2]) << std::endl;
         }
 
+        void mark_complete() {
+            this->completed = true;
+        }
+
 
         void do_something_cool() {
             secret();
@@ -54,41 +58,30 @@ class task {
 
 class calendar {
     private:
-        int num_tasks;
-        int list_size;
-        task task_list[10];
+        std::vector<task> task_list; // new addition
 
     public:
-        calendar() : num_tasks(0), list_size(10) { // initializer list syntax, inits num_tasks to 0 and list_size to 10
+        calendar() {}
 
-        }
-
-        void addTask(task new_task) {
-            if (num_tasks == list_size) {
-                std::cout << "List full. Please delete a task before adding more." << std::endl;
-                std::cout << "Task not added." << std::endl;
-                return;
-            }
-            task_list[num_tasks] = new_task;
-            num_tasks++;
+        void addTask(const task &new_task) { // expects a pointer to a task
+            task_list.push_back(new_task);
         }
 
         void deleteTask(int index) {
-            if (index >= list_size || index < 0) {
-                std::cout << "Invalid index. Bounds are 0 <= index <= " + std::to_string(list_size - 1) << std::endl;
-                std::cout << "Task not deleted." << std::endl;
+            if (index < 0 || index >= task_list.size()) {
+                std::cout << "Invalid index." << std::endl;
                 return;
             }
-            // delete task_list[index]; it wasn't dynamically allocated so no need to call delete
-            for (int i = index; i < num_tasks - 1; i++) {
-                task_list[i] = task_list[i + 1];
-            }
-            
-            num_tasks--;
+            // pointer arithmetic
+            task_list.erase(task_list.begin() + index);
+        }
+
+        void mark_task_complete(int index) {
+            task_list[index].mark_complete();
         }
 
         void printTasks() {
-            if (num_tasks == 0) {
+            if (task_list.empty()) {
                 std::cout << "No tasks to print." << std::endl;
                 std::cout << "Tasks not printed." << std::endl;
                 return;
@@ -96,10 +89,10 @@ class calendar {
 
             std::cout << "Printing all tasks:" << std::endl;
             std::cout << "-------------------" << std::endl;
-            for (int i = 0; i < num_tasks; i++) {
+            for (size_t i = 0; i < task_list.size(); i++) {
                 std::cout << "Task " + std::to_string(i) + ": "  << std::endl;
                 task_list[i].print();
-                if (i != num_tasks -1) {
+                if (i != task_list.size() -1) {
                     std::cout << "-------------------" << std::endl;
                 }
             }
@@ -109,34 +102,87 @@ class calendar {
 };
 
 int main() {
-    // std::cout << "Hello world" << std::endl;
+    // always match new with delete
+    calendar my_calendar; // stack, using new allocs mem on heap
 
-    // task *first_task = new task("ml exam prep", 2, 25, 2024);
+    std::cout << "Welcome to your virtual to-do list!" << std::endl;
+    std::cout << std::endl;
 
-    // first_task->do_something_cool();
+    while (true) {
+        std::string userInput;
 
-    // first_task->print();
+        std::cout << "Please enter a number corresponding to one of the following options." << std::endl;
+        std::cout << "1. Add Task" << std::endl;
+        std::cout << "2. Remove Task" << std::endl;
+        std::cout << "3. View Tasks" << std::endl;
+        std::cout << "4. Mark a task as completed" << std::endl;
+        std::cout << "5. Exit" << std::endl;
+        std::cout << std::endl;
 
+        std::getline(std::cin, userInput);
 
-    // std::string userInput;
-    
-    // std::cout << "Please enter a line of text:" << std::endl;
-    
-    // // Get the entire line from standard input and store it in userInput
-    // std::getline(std::cin, userInput);
-    
-    // std::cout << "You entered: " << userInput << std::endl;
+        if (userInput == "1") {
+            // TODO: add input checking later
+            std::string task_name;
+            int task_month;
+            int task_day;
+            int task_year;
+            std::string newline_eater;
 
-    calendar *my_calendar = new calendar();
-    task *first_task = new task("ml exam prep", 2, 25, 2024);
-    my_calendar->addTask(*first_task);
+            std::cout << "Please enter the name of the task you'd like to create" << std::endl;
+            std::getline(std::cin, task_name);
+            std::cout << "Please enter the month of the task" << std::endl;
+            std::cin >> task_month;
+            std::getline(std::cin, newline_eater); // clean up the newline from reading the ints
 
-    my_calendar->printTasks();
+            std::cout << "Please enter the day of the task" << std::endl;
+            std::cin >> task_day;
+            std::getline(std::cin, newline_eater);
 
-    my_calendar->deleteTask(0);
+            std::cout << "Please enter the year of the task" << std::endl;
+            std::cin >> task_year;
+            std::getline(std::cin, newline_eater);
 
-    my_calendar->printTasks();
+            // task *my_task = new task(task_name, task_month, task_day, task_year);
+            task my_task(task_name, task_month, task_day, task_year); // stack, whereas above is dynamic alloc
+            
+            // my_calendar->addTask(*my_task); // arg is the value stored at the pointer, the address of the task object
+            my_calendar.addTask(my_task);
+        }
+        else if (userInput == "2") {
+            std::string newline_eater;
+            int deletion_index;
+            std::cout << "Please enter the index of the task you would like to delete" << std::endl;
+            std::cout << "Please note that task indexes start at 0" << std::endl;
+            std::cin >> deletion_index;
+            std::getline(std::cin, newline_eater);
 
+            my_calendar.deleteTask(deletion_index);
+            std::cout << "Task deleted" << std::endl;
+        }
+        else if (userInput == "3") {
+            my_calendar.printTasks();
+        }
+        else if (userInput == "4") {
+            std::string newline_eater;
+            int completed_task_index;
+            std::cout << "Please enter the index of the task you would like to mark as completed" << std::endl;
+            std::cout << "Please note that task indexes start at 0" << std::endl;
+            std::cin >> completed_task_index;
+            std::getline(std::cin, newline_eater);
+
+            my_calendar.mark_task_complete(completed_task_index);
+            std::cout << "Task marked as complete" << std::endl;
+        }
+        else if (userInput == "5") {
+            break;
+        }
+        else {
+            std::cout << "Invalid choice" << std::endl;
+            std::cout << "Please enter a number between 1-4, inclusive, and press enter." << std::endl;
+        }
+        std::cout << std::endl;
+    }
 
     return 0;
 }
